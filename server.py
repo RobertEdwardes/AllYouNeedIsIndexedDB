@@ -3,14 +3,17 @@
 import asyncio
 import websockets
 
+connections = set()
+
 async def hello(websocket):
-    name = await websocket.recv()
-    print(f"<<< {name}")
-
-    greeting = f"Hello {name}!"
-
-    await websocket.send(greeting)
-    print(f">>> {greeting}")
+    connections.add(websocket)
+    try:
+        while True:
+            message = await websocket.recv()
+            websockets.broadcast(connections, message)
+    finally:
+        connections.remove(websocket)
+    
 
 async def main():
     async with websockets.serve(hello, "localhost", 8765):
