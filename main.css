@@ -1,0 +1,8 @@
+.message-{
+    &in{
+        color: blue;
+    }
+    &out{
+        color: red;
+    }
+}
