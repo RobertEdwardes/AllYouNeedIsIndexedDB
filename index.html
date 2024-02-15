@@ -53,7 +53,7 @@
             const chatOutput = document.getElementById("chat-output");
 
             messages.forEach(message => {
-                chatOutput.innerHTML += `<p class="${direction.loc}">${message.content}</p>`;
+                chatOutput.innerHTML += `<p class=${message.direction}>${message.content}</p>`;
             });
         };
     }
@@ -82,7 +82,7 @@
         const chatOutput = document.getElementById("chat-output");
 
         // Display incoming message
-        chatOutput.innerHTML += `<p>${message}</p>`;
+        chatOutput.innerHTML += `<p class=${message.direction}>${message}</p>`;
 
         // Save message to IndexedDB
         const transaction = db.transaction(storeName, "readwrite");
