@@ -1,0 +1,75 @@
+ // Establish WebSocket connection
+ const socket = new WebSocket("ws://localhost:8765");
+
+ // Open IndexedDB
+ const dbName = "chatDB";
+ const dbVersion = 1;
+ const storeName = "messages";
+
+ let db;
+
+ const request = indexedDB.open(dbName, dbVersion);
+
+ request.onerror = function(event) {
+     console.error("Error opening IndexedDB:", event.target.errorCode);
+ };
+
+ request.onsuccess = function(event) {
+     db = event.target.result;
+     displayStoredMessages();
+ };
+
+ request.onupgradeneeded = function(event) {
+     const db = event.target.result;
+     const store = db.createObjectStore(storeName, { autoIncrement: true, keyPath: "id" });
+     store.createIndex("content", "content", { unique: false });
+ };
+
+ // Function to display stored messages from IndexedDB
+ function displayStoredMessages() {
+     const transaction = db.transaction(storeName, "readonly");
+     const store = transaction.objectStore(storeName);
+     const request = store.getAll();
+
+     request.onsuccess = function(event) {
+         const messages = event.target.result;
+         const chatOutput = document.getElementById("chat-output");
+
+         messages.forEach(message => {
+             chatOutput.innerHTML += `<p class=${message.direction}>${message.content}</p>`;
+         });
+     };
+ }
+
+ // Function to send a message
+ function sendMessage() {
+     const messageInput = document.getElementById("message-input");
+     const message = messageInput.value;
+
+     // Send message to WebSocket server
+     socket.send(message);
+
+     // Save message to IndexedDB
+     const transaction = db.transaction(storeName, "readwrite");
+     const store = transaction.objectStore(storeName);
+
+     store.add({ content: message, direction: 'message-out' });
+
+     // Clear input field
+     messageInput.value = "";
+ }
+
+ // Handle incoming WebSocket messages
+ socket.onmessage = function(event) {
+     const message = event.data;
+     const chatOutput = document.getElementById("chat-output");
+
+     // Display incoming message
+     chatOutput.innerHTML += `<p class=${message.direction}>${message}</p>`;
+
+     // Save message to IndexedDB
+     const transaction = db.transaction(storeName, "readwrite");
+     const store = transaction.objectStore(storeName);
+
+     store.add({ content: message , direction: 'message-in'});
+ };
